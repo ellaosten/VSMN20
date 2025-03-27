@@ -1,0 +1,7 @@
+# Task 2
+L=640 # m
+Inch=(L*10**2)/2.54
+Feet=Inch/12
+Yard=Feet/3
+British_mil=Yard/1760
+print(Inch, Feet, Yard, British_mil)

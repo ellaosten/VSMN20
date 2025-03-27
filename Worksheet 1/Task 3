@@ -1,0 +1,6 @@
+# Task 3
+P=1000 # sek
+r=0.05 # enhet??
+n=3 # years
+A=P*(1+(r/100))**n
+print(A)

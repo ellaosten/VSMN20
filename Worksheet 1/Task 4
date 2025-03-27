@@ -1,0 +1,6 @@
+# Task 4
+C_values=[] #List to store values
+
+for F in range(0, 100, 10):
+    C=(5/9)*(F-32)
+    print(float(C),F)

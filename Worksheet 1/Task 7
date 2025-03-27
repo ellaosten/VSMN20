@@ -1,0 +1,16 @@
+# Calculate matrices
+import numpy as np
+import matplotlib.pyplot as plt
+A=np.matrix([[1,2,3],[3,7,4],[2,5,3]])
+b=np.matrix([[1],[2],[3]])
+print(A)
+print(b)
+
+# Calculate and print expressions
+print(A.T) # Matrix transpose
+print(A*b) # Matrix multiplication
+print(A.I) # Matrix inverse
+
+# Solve system of equations
+x=np.linalg.solve(A,b)
+print(x)
