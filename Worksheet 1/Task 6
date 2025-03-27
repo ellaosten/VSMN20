@@ -9,4 +9,5 @@ for i in range(1):
     x = np.linspace(0, 2*math.pi, 100)
     y = np.array([f(xi) for xi in x])
     plt.plot(x, y)
+    plt.title('Graph of f(x)=sin(x^2)')
     plt.show()
