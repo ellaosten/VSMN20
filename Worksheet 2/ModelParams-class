@@ -14,7 +14,10 @@ class ModelParams:
         self.ep = [self.t]
 
         # --- Element properties
-        ....
+        self.D = np.array([
+            [50.0, 0.0],
+            [0.0, 50.0],
+        ])
 
         # --- Create input for the example use cases
 
@@ -28,25 +31,83 @@ class ModelParams:
         ])
         # --- Element topology
         self.edof = np.array ([
-            [1, 2, 4],
-            [1, 4, 3],
-            [3, 4, 6],
-            [3, 6, 5],
+            [1, 4, 2],
+            [1, 3, 4],
+            [3, 6, 4],
+            [3, 5, 6],
         ])
         # --- Loads
-        self.loads = [
+        self.loads = ([
             [0],
             [0],
             [0],
             [0],
             [0],
             [-400],
-        ]
+        ])
 
         # --- Boundary conditions
-        self.bc = [
+        self.bc = ([
             [2, 60],
             [4, 60],
-        ]
+        ])
 
-        """
+class ModelResult:
+    """Class for storing results from calculations"""
+    def __inti__ (self):
+        self.a = None
+        self.r = None
+        self.ed = None
+        self.qs = None
+        self.qt = None
+
+class Solver:
+    """Class for performing the model computations"""
+    def __init__(self, model_params, model_result):
+        self.model_params = model_params
+        self.model_result = model_result
+    
+    def execute(self):
+        # --- Assign shorter variables names from model properties
+        edof = self.model_params.edof
+        coord = self.model_params.coord
+        loads = self.model_params.loads
+        dof = self.model_params.dof
+        bcs = self.model_params.bcs
+        ep = self.model_params.ep
+
+        # --- Store results in model_result
+        self.model_results.a = a
+        self.model_results.r = r
+        self.model_results.ed = ed
+        self.model_results.qs = qs
+        self.model_results.qt = qt
+
+        for load in loads:
+            dof = load[0]
+            mag = load[1]
+            f[dof - 1] = mag
+        
+        bc_prescr = []
+        bc_value=[]
+
+        for bc in bcs:
+            dof = bc[0]
+            value = bc[1]
+            bc_prescr.append(dof)
+            bc_value.append(value)
+
+        bc_prescr = np.array(bc_prescr)
+        bc_value = np.array(bc_value)
+
+        a, r = cfu.solveq(K, f, bc_prescr, bc_value)
+
+        # Calculate element flows and gradients
+        es = np.zeros([n_el, 2])
+        et = np.zeros([n_el, 2])
+
+        for elx, ely, eld, eles
+
+
+    
+    
