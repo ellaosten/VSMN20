@@ -100,14 +100,5 @@ class Solver:
         bc_prescr = np.array(bc_prescr)
         bc_value = np.array(bc_value)
 
-        a, r = cfu.solveq(K, f, bc_prescr, bc_value)
-
-        # Calculate element flows and gradients
-        es = np.zeros([n_el, 2])
-        et = np.zeros([n_el, 2])
-
-        for elx, ely, eld, eles
-
-
-    
-    
+        a, r = cfc.solveq(K, f, bc_prescr, bc_value)
+        print(K)
