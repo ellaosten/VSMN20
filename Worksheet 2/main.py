@@ -11,4 +11,4 @@ if __name__ == "__main__":
     solver.execute()
     
     report = fm.ModelReport(model_params, model_results)
-    print(report)
+    print(report, file=open("Results.txt", "w"))
