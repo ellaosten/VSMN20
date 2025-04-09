@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import numpy as np 
 import calfem.core as cfc
 import calfem.utils as cfu
@@ -256,7 +257,7 @@ class ModelReport:
         )
 
         self.add_text()
-        self.add_text("BCs")
+        self.add_text("Boundary conditions")
         self.add_text()
         self.add_text(
             tab.tabulate(self.model_params.bcs, headers=["dof", "value"], numalign="right",
@@ -267,7 +268,7 @@ class ModelReport:
         self.add_text()
         self.add_text("----------- Results --------------------")
         self.add_text()
-        self.add_text("Nodal temps and flows (a and r)")
+        self.add_text("Nodal temps and flows")
         self.add_text()
         dof=self.model_params.dof.flatten().reshape(-1,1)
         a=np.array(self.model_results.a).flatten().reshape(-1,1)
@@ -304,7 +305,7 @@ class ModelReport:
             floatfmt=(".0f", ".4f", ".4f"),),
         )
         self.add_text()
-        self.add_text("Element temperatures")
+        self.add_text("Element pressure")
         self.add_text()
         self.add_text(
             tab.tabulate(np.array(np.hstack((self.model_params.elem.reshape(-1,1), self.model_results.ed))),
