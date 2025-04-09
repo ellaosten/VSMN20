@@ -57,8 +57,7 @@ class ModelParams:
         ])
         # --- Loads
         self.loads = ([
-            [2, 60.0],
-            [4, 60.0],
+            [6, -400.0],
         ])
 
          # --- Boundary conditions
@@ -82,7 +81,7 @@ class ModelParams:
 
         model_params["coord"] = self.coord.tolist() # Convert NumPy array to list for JSON compatibility
 
-        ofile = oplen(filename, "w")
+        ofile = open(filename, "w")
         json.dump(model_params, ofile, sort_keys = True, indent = 4)
         ofile.close()
 
@@ -177,11 +176,6 @@ class ModelSolver:
             showindex=range(1, len(a_and_r) + 1),
             )
 
-        # --- Store results in model_result
-        self.model_results.a = a
-        self.model_results.r = r
-        self.model_results.ed = ed
-
         # Calculate element flows and gradients
         es = np.zeros([n_el, 2])
         et = np.zeros([n_el, 2])
@@ -190,6 +184,13 @@ class ModelSolver:
             es_el, et_el = cfc.flw2ts(elx, ely, D, eld)
             eles[:] = es_el[0, :]
             elet[:] = et_el[0, :]
+
+        # --- Store results in model_result
+        self.model_results.a = a
+        self.model_results.r = r
+        self.model_results.ed = ed
+        self.model_results.es = es
+        self.model_results.et = et
 
 class ModelReport:
     """Class for presenting input and output parameters in report form"""
@@ -208,6 +209,7 @@ class ModelReport:
         self.clear()
         self.add_text()
         self.add_text("----------- Model Input --------------------")
+        self.add_text()
         self.add_text("Input parameters")
         self.add_text()
         self.add_text(
@@ -216,6 +218,8 @@ class ModelReport:
             floatfmt=".0f", 
             tablefmt="psql",)
         )
+        
+        self.add_text()
         self.add_text("Coordinates")
         self.add_text()
         self.add_text(
@@ -224,6 +228,7 @@ class ModelReport:
             tablefmt="psql",)
         )
     
+        self.add_text()
         self.add_text("Dofs")
         self.add_text()
         self.add_text(
@@ -232,28 +237,84 @@ class ModelReport:
             tablefmt="psql",)
         )
 
+        self.add_text()
+        self.add_text("Edof")
+        self.add_text()
+        self.add_text(
+            tab.tabulate(self.model_params.edof, headers=["e1", "e2", "e3"], numalign="right",
+            floatfmt=".0f", 
+            tablefmt="psql",)
+        )
+
+        self.add_text()
+        self.add_text("Loads")
+        self.add_text()
+        self.add_text(
+            tab.tabulate(self.model_params.loads, headers=["dof", "mag"], numalign="right",
+            floatfmt=".0f", 
+            tablefmt="psql",)
+        )
+
+        self.add_text()
+        self.add_text("BCs")
+        self.add_text()
+        self.add_text(
+            tab.tabulate(self.model_params.bcs, headers=["dof", "value"], numalign="right",
+            floatfmt=".0f", 
+            tablefmt="psql",)
+        )
+        
+        self.add_text()
+        self.add_text("----------- Results --------------------")
+        self.add_text()
+        self.add_text("Nodal temps and flows (a and r)")
+        self.add_text()
+        dof=self.model_params.dof.flatten().reshape(-1,1)
+        a=np.array(self.model_results.a).flatten().reshape(-1,1)
+        r=np.array(self.model_results.r).flatten().reshape(-1,1)
+        self.add_text(
+            tab.tabulate(
+            np.array(np.hstack((dof, a, r))),
+            headers=["D.o.f.", "Phi [m]", "q [m^2/day]"],
+            numalign="right",
+            tablefmt="psq1",
+            floatfmt=(".0f", ".4f", ".4f"),)
+            
+        )
+
+        self.add_text()
+        self.add_text("Element flows")
+        self.add_text()
+        self.add_text(
+            tab.tabulate(np.array(np.hstack((self.model_params.elem.reshape(-1,1), self.model_results.es))),
+            headers=["Element", "q_x [m^2/day]", "q_y [m^2/day]"],
+            numalign="right",
+            tablefmt="psql",
+            floatfmt=(".0f", ".4f", ".4f"),),
+        )
+        
+        self.add_text()
+        self.add_text("Element gradients")
+        self.add_text()
+        self.add_text(
+            tab.tabulate(np.array(np.hstack((self.model_params.elem.reshape(-1,1), self.model_results.et))),
+            headers=["Element", "grad_x [1/m]", "grad_y [1/m]"],
+            numalign="right",
+            tablefmt="psql",
+            floatfmt=(".0f", ".4f", ".4f"),),
+        )
+        self.add_text()
+        self.add_text("Element temperatures")
+        self.add_text()
+        self.add_text(
+            tab.tabulate(np.array(np.hstack((self.model_params.elem.reshape(-1,1), self.model_results.ed))),
+            headers=["Element", "phi_1 [m]", "phi_2 [m]", "phi_3 [m]"],
+            numalign="right",
+            tablefmt="psql",
+            floatfmt=(".0f", ".4f", ".4f", ".4f"),),
+        )
+        
         return self.report
-
-
-# -*- coding: utf-8 -*-
-
-if __name__ == "__main__":
-    print("This will is executed as a script and not imported")
-
-# -*- coding: utf-8 -*-
-
-import flowmodel as fm
-
-if __name__ == "__main__":
-
-    model_params = fm.ModelParams()
-    model_results = fm.ModelResult()
-
-    solver = fm.ModelSolver(model_params, model_results)
-    solver.execute()
-
-    report = fm.ModelReport(model_params, model_results)
-    print(report)
     
 
 
