@@ -122,6 +122,7 @@ class ModelSolver:
         ep = self.model_params.ep
         kx = self.model_params.kx
         ky = self.model_params.ky
+        D = self.model_params.D
 
         # Get geometry from model_params
 
@@ -162,6 +163,17 @@ class ModelSolver:
         self.model_results.el_type = el_type
         self.model_results.dofs_per_node = dofs_per_node
 
+        # Initialize the global stiffness matrix and load vector
+
+        n_dofs = np.max(dofs)
+        K = np.zeros((n_dofs, n_dofs))
+        f = np.zeros((n_dofs, 1))
+
+        # Apply boundary conditions based on markers
+
+        bc_prescr = []
+        bc_values = []
+        
         ## Use this in simular way as in worksheet 2 but use generated mesh data for FE calculations
 
 class ModelSolver:
