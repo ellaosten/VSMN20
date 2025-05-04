@@ -27,6 +27,7 @@ class ModelParams:
         self.h = 10.0 # height of domain
         self.d = 5.0 # depth of barrier
         self.t = 0.5 # thickness of domain
+        self.ep = [self.t, int(2)] # element properties
 
         # Material properties
 
@@ -42,7 +43,7 @@ class ModelParams:
         # node numbers or degrees of freedom
 
         self.bc_markers = {
-            "left_bc" : 10, #Markers for left boundary condition
+            "left_bc" : 10, # Markers for left boundary condition
             "right_bc" : 20 # Markers for right boundary condition
         }
         self.bc_values = {
@@ -157,80 +158,35 @@ class ModelParams:
         self.load_values = model_params["load_values"]
 
 class ModelResult:
-    """Class defining the model parameters"""
-    def __init__(self):
-
-        self.version = 1.0
-
-        self.t = 1.0
-        self.k = 50.0
-        self.ep = [self.t] 
-
-        # --- Element properties
-        self.D = np.array([
-            [50.0, 0.0],
-            [0.0, 50.0],
-        ])
-
-        # --- Create input for the example use cases
-
-        self.coord = np.array ([
-            [0.0, 0.0],
-            [0.0, 600.0],
-            [600.0, 0.0],
-            [600.0, 600.0],
-            [1200.0, 0.0],
-            [1200.0, 600.0],
-        ])
-
-        # --- Element coordinates in x
-
-        self.ex = np.array ([
-            [0.0, 600.0, 0.0],
-            [0.0, 600.0, 600.0],
-            [600.0, 1200.0, 600.0],
-            [600.0, 1200.0, 1200.0],
-        ])
-
-        # --- Element coordinates in y
-        self.ey = np.array ([
-            [0.0, 600.0, 600.0],
-            [0.0, 0.0, 600.0],
-            [0.0, 600.0, 600.0],
-            [0.0, 0.0, 600.0], 
-        ])
-
-        # --- Element topology
-        self.edof = np.array ([
-            [1, 4, 2],
-            [1, 3, 4],
-            [3, 6, 4],
-            [3, 5, 6],
-        ])
-        # --- Loads
-        self.loads = ([
-            [6, -400.0],
-        ])
-
-         # --- Boundary conditions
-        self.bcs = ([
-            [2, 60],
-            [4, 60],
-        ])
-
-        # --- Degrees of freedom
-        self.dof = np.array ([1, 2, 3, 4, 5, 6])
-
-        # --- Element numbers
-        self.elem = np.array([1, 2, 3, 4])
-
     """Class for storing results from calculations"""
     def __inti__ (self):
+        
+        # Initialize attributes for mesh and geometry
+        self.loads = None
+        self.bcs = None
+        self.coords = None
+        self.edof = None
+        self.dofs = None
+        self.bdofs = None
+        self.boundary_elements = None
+        self.geometry = None
+
+        # Initialize attributes for results
         self.a = None
         self.r = None
         self.ed = None
         self.es = None
         self.et = None
+
+        self.flow = None
+        self.pressure = None
+        self.gradient = None
+
+        self.max_nodal_flow = None
+        self.max_nodal_pressure = None
+        self.max_element_flow = None
+        self.max_element_pressure = None
+        self.max_element_gradient = None
 
 class ModelVisualization:
     """Class for visualizing model geometry, mesh and results"""
@@ -286,16 +242,6 @@ class ModelVisualization:
         )
 
     def show_element_values(self):
-         """Class for solving the finite element model"""
-    def __init__(self, model_params, model_results):
-        self.model_params = model_params
-        self.model_results = model_results
-
-
-
-
-### Gammal kod
-
         """Display element flows"""
         # Create a new figure
         cfv.figure()
@@ -375,189 +321,148 @@ class ModelSolver:
         K = np.zeros((n_dofs, n_dofs))
         f = np.zeros((n_dofs, 1))
 
-        # Apply boundary conditions based on markers
-
-        bc_prescr = []
-        bc_values = []
-
-        # For each boundary condition marker in model_params
-
-        for marker_name, marker_id in self.model_params.bc_markers.items():
-            if marker_name in self.model_params.bc_values:
-                value = self.model_params.bc_values[marker_name]
-                cfu.apply_bc_from_markers(
-                    bdofs,
-                    boundary_elements,
-                    marker_id,
-                    bc_prescr,
-                    bc_values,
-                    value
-                )
-        # Convert to numpy arrays
-        bc_prescr = np.array(bc_prescr)
-        bc_values = np.array(bc_values)
-
-        # Apply loads based on markers
         for marker_name, marker_id in self.model_params.load_markers.items():
             if marker_name in self.model_params.load_values:
                 value = self.model_params.load_values[marker_name]
-                cfu.apply_load_from_markers(
-                    bdofs,
-                    boundary_elements,
-                    marker_id,
-                    f,
-                    value
-                )
-        # Solve equation system
-        a, r = cfc.solveq(K, f, bc_prescr, bc_values)
-        # Store displacement and reaction forces
-        self.model_results.a = a
-        self.model_results.r = r
+                
+                if marker_id in boundary_elements:
+                    for be in boundary_elements[marker_id]:
+                        nodes = be["node-number-list"]
+                        if len(nodes) != 2:
+                            continue
+                        
+                        node1 = nodes[0] - 1
+                        node2 = nodes[1] - 1
 
-        ## Calculate element displacements, flow etc in similar way to worksheet 2
-        # --- Calculate element flows and gradients
+                        dofs_node1 = bdofs.get(node1)
+                        dofs_node2 = bdofs.get(node2)
 
-        for load in loads:
-            dof = load[0]
-            mag = load[1]
-            f[dof - 1] = mag
+                        if dofs_node1 in None or dofs_node2 in None:
+                            continue
+                        dof1 = dofs_node1[0]
+                        dof2 = dofs_node2[0]
+
+                        x1, y1 = coords[node1]
+                        x2, y2 = coords[node2]
+
+                        edge_length = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+                        f[dof1] += value * edge_length / 2.0
+                        f[dof2] += value * edge_length / 2.0
         
-        bc_prescr = []
-        bc_value=[]
+        # Global stiffness matrix assembly
+        nDofs = np.size(dofs) # number of global degrees of freedom
+        ex, ey = cfc.coordxtr(edof, coords, dofs) # extract coordinates of elements
+        K = np.zeros([nDofs, nDofs]) # global stiffness matrix
 
-        for bc in bcs:
-            dof = bc[0]
-            value = bc[1]
-            bc_prescr.append(dof)
-            bc_value.append(value)
+        n_el = edof.shape[0] # number of elements
+        ep = np.tile(self.model_params.ep, (n_el, 1)).astype(object)
 
-        bc_prescr = np.array(bc_prescr)
-        bc_value = np.array(bc_value)
+        for i, (eltopo, elx, ely) in enumerate(zip(edof, ex, ey)):
+            thickness = float(ep[i][0])
+            integration_rule = int(ep[i][1])
+            el_ep = [thickness, integration_rule]
+            Ke = cfc.flw2i4e(elx, ely, el_ep, D)
+            cfc.assem(eltopo, K, Ke)
+        
+        # Global load vector assembly
+        f = np-zeros([nDofs, 1])
 
-        a, r = cfc.solveq(K, f, bc_prescr, bc_value)
+        # Boundary conditions
+        bc = np.array([], int)
+        bcVal = np.array([], int)
 
+        for name, marker in self.model_params.bc_markers.items():
+            value = self.model_params.bc_values.get(name, 0.0)
+            bc, bcVal = cfu.applybc(bdofs, bc, bcVal, marker, value)
+        
+        # Solve the system of equations
+        a, r = cfc.solveq(K, f, bc, bcVal)
         ed = cfc.extractEldisp(edof, a)
-        n_el = edof.shape[0] # 4
-        es = np.zeros((n_el, 2))
-        et = np.zeros((n_el, 2))
 
-        a_and_r = np.hstack((a, r))
+        # Calculate element flows and gradient
+        flow = []
+        gradient = []
 
-        temp_table = tab.tabulate(
-            np.asarray(a_and_r),
-            headers=["D.o.f.", "Phi [m]", "q [m^2/day]"],
-            numalign="right",
-            floatfmt=".4f",
-            tablefmt="psq1",
-            showindex=range(1, len(a_and_r) + 1),
-            )
+        for i in range(edof.shape[0]):
+            el_ep = [float(ep[i][0]), int(ep[i][1])]
+            es, et, eci = cfc.flw2i4s(ex[i, :], ey[i, :], el_ep, D, ed[i, :])
+            flow.append(np.sqrt(es[0, 0]**2 + es[0, 1]**2))
+            gradient.append(np.sqrt(et[0, 0]**2 + et[0, 1]**2))
 
-        # Calculate element flows and gradients
-        es = np.zeros([n_el, 2])
-        et = np.zeros([n_el, 2])
-
-        for elx, ely, eld, eles, elet in zip(ex, ey, ed, es, et):
-            es_el, et_el = cfc.flw2ts(elx, ely, D, eld)
-            eles[:] = es_el[0, :]
-            elet[:] = et_el[0, :]
-
-        # --- Store results in model_result
+        # Maximal flow, pressure and gradient for nodes and elements
+        max_nodal_flow = np.max(np.abs(r))
+        max_nodal_pressure = np.max(np.abs(a))
+        max_element_flow = np.max(np.abs(flow))
+        max_element_pressure = np.max(np.abs(ed))
+        max_element_gradient = np.max(np.abs(gradient))
+        # Store results in model_results
         self.model_results.a = a
         self.model_results.r = r
         self.model_results.ed = ed
-        self.model_results.es = es
+        self.model_results.es = es 
         self.model_results.et = et
-    
-     # Calculate maximum flow for parameter studies
-        element_values = np.sqrt(np.sum(self.model_results.es**2, axis=1))
-        self.model_results.max_value = np.max(element_values)
 
+        self.model_results.flow = flow
+        self.model_results.gradient = gradient
 
+        self.model_results.loads = list(zip(bc, bcVal))
+        self.model_results.bcs = list(zip(bc, bcVal))
+        self.model_results.edof = edof
+        self.model_results.dofs = dofs
+        self.model_results.coords = coords
+        self.model_results.elem = np.arange(edof.shape[0])
 
-###################### vad händer här egentligen
+        self.model_results.max_nodal_flow = max_nodal_flow
+        self.model_results.max_nodal_pressure = max_nodal_pressure
+        self.model_results.max_element_flow = max_element_flow
+        self.model_results.max_element_pressure = max_element_pressure
+        self.model_results.max_element_gradient = max_element_gradient
 
-    """Class for performing the model computations"""
-    def __init__(self, model_params, model_results):
-        self.model_params = model_params
-        self.model_results = model_results
-    
-    def execute(self):
-        # --- Assign shorter variables names from model properties
-        edof = self.model_params.edof
-        coord = self.model_params.coord
-        loads = self.model_params.loads
-        dof = self.model_params.dof
-        bcs = self.model_params.bcs
-        ep = self.model_params.ep
-        D = self.model_params.D
-        ex = self.model_params.ex
-        ey = self.model_params.ey
+    def run_parameter_study(self):
+        """Run a parameter study by varying the barrier depth"""
 
-    def execute(self):
-        # Initialize the global stiffness matrix and load vector
+        # Parameter to vary
+        d_values = np.linspace(1.0, 9.0, 9)
+        max_flow_values = []
 
-        n_dofs = np.max(dofs)
-        K = np.zeros((n_dofs, n_dofs))
-        f = np.zeros((n_dofs, 1))
+        # Run simulation for each value
+        for d in d_values:
+            print(f"Simulating with barrier depth d = {d:.2f}")
 
-        ## Assemble to global matrix in simular way to worksheet 2
-        # --- Create global stiffness matrix and load vector
-        K = np.zeros((6,6))
-        f = np.zeros((6,1))
+            # Create model with current parameter
+            model_params = ModelParams()
+            model_params.d = d # Set current barrier depth
 
-        f[5] = -400.0
-        # --- Calculate element stiffness matrices and assemble global stiffness matrix
-        ke1 = cfc.flw2te(ex[0,:], ey[0,:], ep, D)
-        ke2 = cfc.flw2te(ex[1,:], ey[1,:], ep, D)
-        ke3 = cfc.flw2te(ex[2,:], ey[2,:], ep, D)
-        ke4 = cfc.flw2te(ex[3,:], ey[3,:], ep, D)
+            # Other parameters remain constant
+            model_params.w = 100.0
+            model_params.h = 10.0
+            model_params.t = 0.5
+            model_params.kx = 20.0
+            model_params.ky = 20.0
 
-        # --- Assemble global stiffness matrix
-        cfc.assem(edof[0,:], K, ke1, f)
-        cfc.assem(edof[1,:], K, ke2, f)
-        cfc.assem(edof[2,:], K, ke3, f)
-        cfc.assem(edof[3,:], K, ke4, f)
+            # Create result storage and solver
+            model_results = ModelResult()
+            model_solver = ModelSolver(model_params, model_results)
 
-        # Apply boundary conditions based on markers
+            # Run the simulation 
+            model_solver.execute()
 
-        bc_prescr = []
-        bc_values = []
+            # Store the maximum flow for this configuration
+            max_flow_values.append(np.max(model_results.es))
+            print(f"Max flow value: {np.max(model_results.es):.4f}")
 
-        # For each boundary condition marker in model_params
+        # Plot the results
+        plt.figure(figsize=(10, 6))
+        plt.plot(d_values, max_flow_values, 'o-', linewidth=2)
+        plt.grid(True)
+        plt.xlabel('Barrier Depth (d)')
+        plt.ylabel('Maximum Flow')
+        plt.title('Parameter Study: Effect of barrier depth on maximum flow')
+        plt.savefig("parameter_study.png")
+        plt.show()
 
-        for marker_name, marker_id in self.model_params.bc_markers.items():
-            if marker_name in self.model_params.bc_values:
-                value = self.model_params.bc_values[marker_name]
-                cfu.apply_bc_from_markers(
-                    bdofs,
-                    boundary_elements,
-                    marker_id,
-                    bc_prescr,
-                    bc_values,
-                    value
-                )
-        # Convert to numpy arrays
-        bc_prescr = np.array(bc_prescr)
-        bc_values = np.array(bc_values)
-
-        # Apply loads based on markers
-        for marker_name, marker_id in self.model_params.load_markers.items():
-            if marker_name in self.model_params.load_values:
-                value = self.model_params.load_values[marker_name]
-                cfu.apply_load_from_markers(
-                    bdofs,
-                    boundary_elements,
-                    marker_id,
-                    f,
-                    value
-                )
-        # Solve equation system
-        a, r = cfc.solveq(K, f, bc_prescr, bc_values)
-        # Store displacement and reaction forces
-        self.model_results.a = a
-        self.model_results.r = r
-        
-
+        # Returns results for further analysis if needed
+        return d_values, max_flow_values
 
 class ModelReport:
     """Class for presenting input and output parameters in report form"""
@@ -577,108 +482,48 @@ class ModelReport:
         self.add_text()
         self.add_text("----------- Model Input --------------------")
         self.add_text()
-        self.add_text("Input parameters")
-        self.add_text()
         self.add_text(
-            tab.tabulate(np.asarray([np.hstack((self.model_params.t, self.model_params.k))]), 
-                         headers=["t", "k"], numalign="right",
-            floatfmt=".0f", 
-            tablefmt="psql",)
-        )
-        
-        self.add_text()
-        self.add_text("Coordinates")
-        self.add_text()
-        self.add_text(
-            tab.tabulate(self.model_params.coord, headers=["x", "y"], numalign="right",
-            floatfmt=".0f", 
-            tablefmt="psql",)
-        )
-    
-        self.add_text()
-        self.add_text("Dofs")
-        self.add_text()
-        self.add_text(
-            tab.tabulate(self.model_params.dof.flatten().reshape(-1,1), headers=["Dofs"], numalign="right",
-            floatfmt=".0f", 
-            tablefmt="psql",)
+            tab.tabulate([
+                ["t", self.model_params.t],
+                ["w", self.model_params.w],
+                ["h", self.model_params.h],
+                ["d", self.model_params.d],
+                ["kx", self.model_params.kx],
+                ["ky", self.model_params.ky],
+                ["Element size", self.model_params.el_size_factor],
+                ["Left boundary", self.model_params.bc_values.get("left_bc", "N/A")],
+                ["Right boundary", self.model_params.bc_values.get("right_bc", "N/A")]
+            ],
+            headers=["Parameter", "Value"],
+            numalign="right",
+            tablefmt="psql",
+            floatfmt=".1f",
+            )
         )
 
         self.add_text()
-        self.add_text("Edof")
+        self.add_text("----------- Model Results ------------------")
         self.add_text()
-        self.add_text(
-            tab.tabulate(self.model_params.edof, headers=["e1", "e2", "e3"], numalign="right",
-            floatfmt=".0f", 
-            tablefmt="psql",)
-        )
-
-        self.add_text()
-        self.add_text("Loads")
-        self.add_text()
-        self.add_text(
-            tab.tabulate(self.model_params.loads, headers=["dof", "mag"], numalign="right",
-            floatfmt=".0f", 
-            tablefmt="psql",)
-        )
-
-        self.add_text()
-        self.add_text("Boundary conditions")
-        self.add_text()
-        self.add_text(
-            tab.tabulate(self.model_params.bcs, headers=["dof", "value"], numalign="right",
-            floatfmt=".0f", 
-            tablefmt="psql",)
-        )
-        
-        self.add_text()
-        self.add_text("----------- Results --------------------")
-        self.add_text()
-        self.add_text("Nodal temps and flows")
-        self.add_text()
-        dof=self.model_params.dof.flatten().reshape(-1,1)
-        a=np.array(self.model_results.a).flatten().reshape(-1,1)
-        r=np.array(self.model_results.r).flatten().reshape(-1,1)
         self.add_text(
             tab.tabulate(
-            np.array(np.hstack((dof, a, r))),
-            headers=["D.o.f.", "Phi [m]", "q [m^2/day]"],
-            numalign="right",
-            tablefmt="psq1",
-            floatfmt=(".0f", ".4f", ".4f"),)
-            
+                [[
+                    self.model_results.max_nodal_pressure,
+                    self.model_results.max_nodal_flow,
+                    self.model_results.max_element_pressure,
+                    self.model_results.max_element_flow,
+                    self.model_results.max_element_gradient
+                ]],
+                headers=[
+                    "Max Nodal Pressure",
+                    "Max Nodal Flow",
+                    "Max Element Pressure",
+                    "Max Element Flow",
+                    "Max Element Gradient"
+                ],
+                numalign="right",
+                tablefmt="psql",
+                floatfmt=".4f",
+            )
         )
 
-        self.add_text()
-        self.add_text("Element flows")
-        self.add_text()
-        self.add_text(
-            tab.tabulate(np.array(np.hstack((self.model_params.elem.reshape(-1,1), self.model_results.es))),
-            headers=["Element", "q_x [m^2/day]", "q_y [m^2/day]"],
-            numalign="right",
-            tablefmt="psql",
-            floatfmt=(".0f", ".4f", ".4f"),),
-        )
-        
-        self.add_text()
-        self.add_text("Element gradients")
-        self.add_text()
-        self.add_text(
-            tab.tabulate(np.array(np.hstack((self.model_params.elem.reshape(-1,1), self.model_results.et))),
-            headers=["Element", "grad_x [1/m]", "grad_y [1/m]"],
-            numalign="right",
-            tablefmt="psql",
-            floatfmt=(".0f", ".4f", ".4f"),),
-        )
-        self.add_text()
-        self.add_text("Element pressure")
-        self.add_text()
-        self.add_text(
-            tab.tabulate(np.array(np.hstack((self.model_params.elem.reshape(-1,1), self.model_results.ed))),
-            headers=["Element", "phi_1 [m]", "phi_2 [m]", "phi_3 [m]"],
-            numalign="right",
-            tablefmt="psql",
-            floatfmt=(".0f", ".4f", ".4f", ".4f"),),
-        )
-        
         return self.report
