@@ -8,7 +8,7 @@ import calfem.geometry as cfg  # for geomtric modeling
 import calfem.mesh as cfm       # for meshing
 import calfem.vis_mpl as cfv    # for visualization
 import calfem.utils as cfu      # for utility functions
-import matplotlib.pylab as plt ## osäker på detta
+import matplotlib.pylab as plt 
 
 import numpy as np
 import tabulate as tab
