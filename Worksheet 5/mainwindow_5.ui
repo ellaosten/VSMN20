@@ -17,13 +17,105 @@
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="5" column="1">
+      <item row="5" column="2">
        <widget class="QLineEdit" name="kx_edit"/>
       </item>
-      <item row="3" column="2">
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="w_edit"/>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="d_end">
+        <property name="text">
+         <string>end value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
        <widget class="QLineEdit" name="d_end_edit"/>
       </item>
-      <item row="0" column="2">
+      <item row="6" column="2">
+       <widget class="QLineEdit" name="ky_edit"/>
+      </item>
+      <item row="1" column="6" rowspan="2">
+       <widget class="QPushButton" name="show_mesh_button">
+        <property name="text">
+         <string>Mesh</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" rowspan="2">
+       <widget class="QLabel" name="w_text">
+        <property name="text">
+         <string>Width</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
+       <widget class="QLineEdit" name="t_end_edit"/>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="t_end">
+        <property name="text">
+         <string>end value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="6">
+       <widget class="QPushButton" name="show_element_values_button">
+        <property name="text">
+         <string>Element Values</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="d_edit"/>
+      </item>
+      <item row="0" column="6">
+       <widget class="QPushButton" name="show_geometry_button">
+        <property name="text">
+         <string>Geometry</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="d_text">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="ky_text">
+        <property name="text">
+         <string>Permeability in y-direction</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="6">
+       <widget class="QPushButton" name="param_button">
+        <property name="text">
+         <string>Param Study</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="5">
+       <widget class="QSpinBox" name="param_step"/>
+      </item>
+      <item row="4" column="5">
+       <widget class="QRadioButton" name="paramvarytradio">
+        <property name="text">
+         <string>Vary</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="5">
+       <widget class="QRadioButton" name="paramvarydradio">
+        <property name="text">
+         <string>Vary</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
@@ -36,27 +128,20 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="0" rowspan="2">
-       <widget class="QLabel" name="w_text">
-        <property name="text">
-         <string>Width</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="kx_text">
-        <property name="text">
-         <string>Permeability in x-direction</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="ky_edit"/>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="h_edit"/>
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="t_text">
         <property name="text">
          <string>Thickness</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="6">
+       <widget class="QPushButton" name="show_nodal_values_button">
+        <property name="text">
+         <string>Nodal Values</string>
         </property>
        </widget>
       </item>
@@ -67,84 +152,27 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="4" rowspan="2">
-       <widget class="QPushButton" name="show_mesh_button">
+      <item row="5" column="0">
+       <widget class="QLabel" name="kx_text">
         <property name="text">
-         <string>Mesh</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="t_edit"/>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="d_edit"/>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="h_edit"/>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="w_edit"/>
-      </item>
-      <item row="4" column="4">
-       <widget class="QPushButton" name="show_element_values_button">
-        <property name="text">
-         <string>Element Values</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="4">
-       <widget class="QPushButton" name="show_nodal_values_button">
-        <property name="text">
-         <string>Nodal Values</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QPushButton" name="show_geometry_button">
-        <property name="text">
-         <string>Geometry</string>
+         <string>Permeability in x-direction</string>
         </property>
        </widget>
       </item>
       <item row="4" column="2">
-       <widget class="QLineEdit" name="t_end_edit"/>
+       <widget class="QLineEdit" name="t_edit"/>
       </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="ky_text">
+      <item row="3" column="1">
+       <widget class="QLabel" name="d_start">
         <property name="text">
-         <string>Permeability in y-direction</string>
+         <string>start value</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="d_text">
+      <item row="4" column="1">
+       <widget class="QLabel" name="t_start">
         <property name="text">
-         <string>Depth</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QRadioButton" name="paramvarydradio">
-        <property name="text">
-         <string>Vary</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QRadioButton" name="paramvarytradio">
-        <property name="text">
-         <string>Vary</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="3">
-       <widget class="QSpinBox" name="param_step"/>
-      </item>
-      <item row="6" column="4">
-       <widget class="QPushButton" name="param_button">
-        <property name="text">
-         <string>Param Study</string>
+         <string>start value</string>
         </property>
        </widget>
       </item>

@@ -12,6 +12,7 @@ import matplotlib.pylab as plt
 
 import numpy as np
 import tabulate as tab
+import pyvtk as vtk
 
 class ModelParams:
     """Class defining parametric model properties"""
@@ -34,6 +35,16 @@ class ModelParams:
         self.kx = 20.0 # permeability in x-direction
         self.ky = 20.0 # permeability in y-direction
         self.D = np.array([[self.kx, 0], [0, self.ky]]) # Permeability matrix
+
+        # Additional parameters for parametric study
+        self.param_d = 1.0
+        self.param_t = 1.0
+        self.d_start = self.d
+        self.d_end = 9.0
+        self.t_start = self.t
+        self.t_end = 5.0
+        self.param_filename = 1
+        self.param_steps = 1
 
         # Mesh control
 
@@ -425,6 +436,9 @@ class ModelSolver:
         d_values = np.linspace(1.0, 9.0, 9)
         max_flow_values = []
 
+        ## Add parameter study for thickness t
+        #t_values = np.linspace(0.5, 5.0, 10)
+
         # Run simulation for each value
         for d in d_values:
             print(f"Simulating with barrier depth d = {d:.2f}...")
@@ -450,6 +464,32 @@ class ModelSolver:
             # Store the maximum flow for this configuration
             max_flow_values.append(np.max(model_results.es))
             print(f"Max flow value: {np.max(model_results.es):.4f}")
+        
+        ## Run simulation for each value of t
+        #for t in t_values:
+            #print(f"Simulating with thickness t = {t:.2f}...")
+
+            # Create model with current parameter
+            #model_params = ModelParams()
+            #model_params.t = t
+
+            # Other parameters remain constant
+            #model_params.w = 100.0
+            #model_params.h = 10.0
+            #model_params.d = 5.0
+            #model_params.kx = 20.0
+            #model_params.ky = 20.0
+
+            # Create result storage and solver
+            #model_results = ModelResult()
+            #model_solver = ModelSolver(model_params, model_results)
+            
+            # Run the simulation
+            #model_solver.execute()
+            
+            # Store the maximum flow for this configuration
+            #max_flow_values.append(np.max(model_results.es))
+            #print(f"Max flow value: {np.max(model_results.es):.4f}")
 
         # Plot the results
         plt.figure(figsize=(10, 6))
@@ -463,6 +503,88 @@ class ModelSolver:
 
         # Returns results for further analysis if needed
         return d_values, max_flow_values
+    
+    def execute_param_study(self):
+        "Kör parameter studie"
+
+        # Store current values for the d and t parameters
+
+        old_d = self.model_params.d
+        old_t = self.model_params.t
+
+        i = 1
+
+        if self.model_params.param_d:
+            # Create a simulation range
+            d_range = np.linspace(self.model_params.d_start, self.model_params.d_end, self.model_params.param_steps) # kan vara så att s:et ska bort i slutet??
+
+            # Loop over the range
+            for d in d_range:
+                print("Executing for d = %g..." % d)
+
+                # Modify parameter in self.model_params
+                self.model_params.d = d
+            
+                # Execute calculations
+                self.execute()
+
+                # Export to VTK
+                vtk_filename = "param_study_%02d.vtk" % i
+                self.export_vtk(vtk_filename)
+        
+        elif self.model_params.param_t:
+            # Create a simulation range 
+            t_range = np.linspace(self.model_params.t_start, self.model_params.t_end, self.model_params.param_steps)
+
+            # Loop over the range
+            for t in t_range:
+                print("Executing for t = %g..." % t)
+
+                # Modify parameter in self.model_params
+                self.model_params.t = t
+            
+                # Execute calculations
+                self.execute()
+
+                # Export to VTK
+                vtk_filename = "param_study_%02d.vtk" % i
+                self.export_vtk(vtk_filename)
+        
+        # Restore preious values of d and t
+
+        self.model_params.d = old_d
+        self.model_params.t = old_t
+    
+    def export_vtk(self, filename):
+        "Export results to VTK"
+        print("Exporting results to %s." % filename)
+
+        # Extract points and polygons
+        points = self.model_results.coords.tolist()
+        polygons = (self.model_results.edof-1).tolist()
+
+        # Kontrollera datan
+        assert len(points) > 0, "Inga punkter att exportera!"
+        assert len(polygons) > 0, "Inga polygoner att exportera!"
+        assert len(self.model_results.a) == len(points), "Skalärvärden matchar inte antal punkter!"
+
+        # Create point data from a
+        point_data = vtk.PointData(
+            vtk.Scalars(self.model_results.a.tolist(), name="Pressure")
+        )
+
+        # Create cell data from max_flow and flow
+        cell_data = vtk.CellData(
+            vtk.Scalars(self.model_results.max_flow, name="max_flow"),
+            vtk.Scalars(self.model_results.flow, name="flow")
+        )
+
+        # Create structure
+        structure = vtk.PolyData(points=points, polygons=polygons)
+
+        # Export to vtk
+        vtk_data = vtk.VtkData(structure, point_data, cell_data)
+        vtk_data.tofile(filename, "ascii")
 
 class ModelReport:
     """Class for presenting input and output parameters in report form"""

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -18,15 +18,15 @@
     <item>
      <layout class="QGridLayout" name="gridLayout">
       <item row="5" column="1">
-       <widget class="QLineEdit" name="kx_edit"/>
+       <widget class="QLineEdit" name="kx_edit" />
       </item>
       <item row="3" column="2">
-       <widget class="QLineEdit" name="d_end_edit"/>
+       <widget class="QLineEdit" name="d_end_edit" />
       </item>
       <item row="0" column="2">
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
+         <enum>Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -51,7 +51,7 @@
        </widget>
       </item>
       <item row="6" column="1">
-       <widget class="QLineEdit" name="ky_edit"/>
+       <widget class="QLineEdit" name="ky_edit" />
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="t_text">
@@ -75,16 +75,16 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QLineEdit" name="t_edit"/>
+       <widget class="QLineEdit" name="t_edit" />
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="d_edit"/>
+       <widget class="QLineEdit" name="d_edit" />
       </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="h_edit"/>
+       <widget class="QLineEdit" name="h_edit" />
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="w_edit"/>
+       <widget class="QLineEdit" name="w_edit" />
       </item>
       <item row="4" column="4">
        <widget class="QPushButton" name="show_element_values_button">
@@ -108,7 +108,7 @@
        </widget>
       </item>
       <item row="4" column="2">
-       <widget class="QLineEdit" name="t_end_edit"/>
+       <widget class="QLineEdit" name="t_end_edit" />
       </item>
       <item row="6" column="0">
        <widget class="QLabel" name="ky_text">
@@ -139,7 +139,7 @@
        </widget>
       </item>
       <item row="6" column="3">
-       <widget class="QSpinBox" name="param_step"/>
+       <widget class="QSpinBox" name="param_step" />
       </item>
       <item row="6" column="4">
        <widget class="QPushButton" name="param_button">
@@ -160,12 +160,12 @@
     <item>
      <widget class="QSlider" name="element_size_slider">
       <property name="orientation">
-       <enum>Qt::Orientation::Horizontal</enum>
+       <enum>Horizontal</enum>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPlainTextEdit" name="report_edit"/>
+     <widget class="QPlainTextEdit" name="report_edit" />
     </item>
    </layout>
   </widget>
@@ -182,16 +182,16 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionnew_action"/>
-    <addaction name="actionopen_action"/>
-    <addaction name="actionsave_action"/>
-    <addaction name="actionsave_as_action"/>
-    <addaction name="actionexit_action"/>
-    <addaction name="actionexecute_action"/>
+    <addaction name="actionnew_action" />
+    <addaction name="actionopen_action" />
+    <addaction name="actionsave_action" />
+    <addaction name="actionsave_as_action" />
+    <addaction name="actionexit_action" />
+    <addaction name="actionexecute_action" />
    </widget>
-   <addaction name="menuFile"/>
+   <addaction name="menuFile" />
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="statusbar" />
   <action name="actionnew_action">
    <property name="text">
     <string>new</string>
@@ -223,6 +223,6 @@
    </property>
   </action>
  </widget>
- <resources/>
- <connections/>
+ <resources />
+ <connections />
 </ui>

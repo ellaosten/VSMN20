@@ -6,11 +6,26 @@ from qtpy.QtCore import QThread
 from qtpy.QtWidgets import QApplication, QDialog, QWidget, QMainWindow, QFileDialog
 from qtpy import uic
 from qtpy.uic import loadUi
+from qtpy.QtWidgets import QMessageBox
 
-import calfem.ui as cfui
+#import calfem.ui as cfui
 import flowmodel_4 as fm
 import xml.etree.ElementTree as ET
 import numpy as np
+
+def clean_ui(uifile):
+    """Fix issues with Orientation:Horizontal/Vertical by creating _cleaned_mainwindow.ui"""
+    tree = ET.parse(uifile)
+    root = tree.getroot()
+    for enum in root.findall(".//property[@name='orientation']/enum"):
+        txt = enum.text or ''
+        if 'Orientation::Horizontal' in txt:
+            enum.text = 'Horizontal'
+        elif 'Orientation::Vertical' in txt:
+            enum.text = 'Vertical'
+    clean_file = os.path.join(os.path.dirname(uifile), '_cleaned_mainwindow.ui')
+    tree.write(clean_file, encoding='utf-8', xml_declaration=True)
+    return clean_file
 
 class SolverThread(QThread):
     "Klass för att hantera beräkningar i bakgrunden"
@@ -40,8 +55,8 @@ class MainWindow(QMainWindow):
         self.calc_done = False
 
         # Clean UI file and load interface description
-        #ui_path = os.path.join(os.path.dirname(__file__), 'mainwindow.ui')
-        #loadUi(clean_ui(ui_path), self)
+        ui_path = os.path.join(os.path.dirname(__file__), 'mainwindow.ui')
+        loadUi(clean_ui(ui_path), self)
 
         # Menu placement in ui window
         self.menuBar().setNativeMenuBar(False)
@@ -52,14 +67,12 @@ class MainWindow(QMainWindow):
 
         # Set input placeholders including boundary fields
         placeholders = {
-            'w_text': '100.0 m',
-            'h_text': '10.0 m',
-            'd_text': '5.0 m',
-            't_text': '0.5 m',
-            'kx_text': '20.0 m/day',
-            'ky_text': '20.0 m/day',
-            #'left_bc_text': '60.0 mvp',
-            #'right_bc_text': '0.0 mvp',
+            'w_edit': '100.0 m',
+            'h_edit': '10.0 m',
+            'd_edit': '5.0 m',
+            't_edit': '0.5 m',
+            'kx_edit': '20.0 m/day',
+            'ky_edit': '20.0 m/day',
         }
 
         # Set placeholder text for all QLineEdit widgets
@@ -68,6 +81,13 @@ class MainWindow(QMainWindow):
                 widget = getattr(self, attr)
                 widget.clear()
                 widget.setPlaceholderText(text)
+
+        #for attr, text in placeholders.items():
+            #if hasattr(self, attr):
+                #widget = getattr(self, attr)
+                #if isinstance(widget, QLineEdit):
+                    #widget.setPlaceholderText(text)
+
     
         # Disable visualization buttons initially
         for btn in (self.show_geometry_button,
@@ -76,13 +96,14 @@ class MainWindow(QMainWindow):
                     self.show_element_values_button):
             btn.setEnabled(False)
 
+
         # Connect menu actions
-        self.new_action.triggered.connect(self.on_new_action)
-        self.open_action.triggered.connect(self.on_open_action)
-        self.save_action.triggered.connect(self.on_save_action)
-        self.save_as_action.triggered.connect(self.on_save_as_action)
-        self.exit_action.triggered.connect(self.on_exit_action)
-        self.execute_action.triggered.connect(self.on_action_execute)
+        self.actionnew_action.triggered.connect(self.handle_new_action)
+        self.actionopen_action.triggered.connect(self.handle_open_action)
+        self.actionsave_action.triggered.connect(self.handle_save_action)
+        self.actionsave_as_action.triggered.connect(self.handle_save_as_action)
+        #self.on_action_exit.triggered.connect(self.on_action_exit)
+        self.actionexecute_action.triggered.connect(self.handle_action_execute)
 
         # Connect visualization buttons
         self.show_geometry_button.clicked.connect(self.on_show_geometry)
@@ -107,12 +128,12 @@ class MainWindow(QMainWindow):
     
         # Define the mapping of UI fields to model parameters
         fields = [
-            ('w_text', 'w', 'Width of domain (w)'),
-            ('h_text', 'h', 'Height of domain (h)'),
-            ('d_text', 'd', 'Depth of barrier (d)'),
-            ('t_text', 't', 'Thickness of barrier (t)'),
-            ('kx_text', 'kx', 'Permeability in x-direction (kx)'),
-            ('ky_text', 'ky', 'Permeability in y-direction (ky)'),
+            ('w_edit', 'w', 'Width of domain (w)'),
+            ('h_edit', 'h', 'Height of domain (h)'),
+            ('d_edit', 'd', 'Depth of barrier (d)'),
+            ('t_edit', 't', 'Thickness of barrier (t)'),
+            ('kx_edit', 'kx', 'Permeability in x-direction (kx)'),
+            ('ky_edit', 'ky', 'Permeability in y-direction (ky)'),
             #('left_bc_text', 'left_bc', 'Left surface pressure (mvp)'),
             #('right_bc_text', 'right_bc', 'Right surface pressure (mvp)'),
         ]
@@ -140,9 +161,9 @@ class MainWindow(QMainWindow):
             return False
     
         # Propagate into bc_values
-        if hasattr(self.model_params, 'bc_values'):
-            self.model_params.bc_values['left_bc'] = self.model_params.left_bc
-            self.model_params.bc_values['right_bc'] = self.model_params.right_bc
+        #if hasattr(self.model_params, 'bc_values'):
+            #self.model_params.bc_values['left_bc'] = self.model_params.left_bc
+            #self.model_params.bc_values['right_bc'] = self.model_params.right_bc
     
         # Properties
         mp = self.model_params
@@ -150,10 +171,47 @@ class MainWindow(QMainWindow):
         mp.el_size_factor = self.element_size_slider.value() / 100.0
         return True
 
-    def on_new_action(self):
-        self.__init__()
+    def handle_new_action(self):
+    #Återställer fält och förbereder nytt tomt projekt
+        self.reset_ui()
 
-    def on_open_action(self):
+    # ----- RESET_UI -----
+    def reset_ui(self):
+        "Återställ gränssnittet och förifyll standardvärden"
+        for attr in ['w_edit', 'h_edit', 'd_edit', 't_edit', 'kx_edit', 'ky_edit']:
+            widget = getattr(self, attr, None)
+            if widget:
+                widget.clear()
+
+        self.element_size_slider.setValue(50)
+
+        for btn in (self.show_geometry_button,
+                    self.show_mesh_button,
+                    self.show_nodal_values_button,
+                    self.show_element_values_button):
+            btn.setEnabled(False)
+
+        self.model_params = None
+        self.model_results = None
+        self.visualization = None
+        self.calc_done = False
+
+        # Fyll i rimliga standardvärden
+        standard_values = {
+            'w_edit': '100.0',
+            'h_edit': '10.0',
+            'd_edit': '5.0',
+            't_edit': '0.5',
+            'kx_edit': '20.0',
+            'ky_edit': '20.0',
+        }
+        for attr, value in standard_values.items():
+            widget = getattr(self, attr, None)
+            if widget:
+                widget.setText(value)
+    
+
+    def handle_open_action(self):
         "Open a model file and load its parameters into the UI"
         # Open file dialog to select a model file
         fn, _= QFileDialog.getOpenFileName(self, 'Open Model File', '', 'Model files (*.json)')
@@ -167,12 +225,12 @@ class MainWindow(QMainWindow):
     
         # Set the model parameters in the UI
         for param, attr in [
-                        ('w', 'w_text'),
-                        ('h', 'h_text'),
-                        ('d', 'd_text'),
-                        ('t', 't_text'),
-                        ('kx', 'kx_text'),
-                        ('ky', 'ky_text')
+                        ('w', 'w_edit'),
+                        ('h', 'h_edit'),
+                        ('d', 'd_edit'),
+                        ('t', 't_edit'),
+                        ('kx', 'kx_edit'),
+                        ('ky', 'ky_edit'),
                         #('left_bc', 'left_bc_text'),
                         # ('right_bc', 'right_bc_text')
                         ]:
@@ -190,7 +248,7 @@ class MainWindow(QMainWindow):
                     self.show_nodal_values_button, self.show_element_values_button):
             btn.setEnabled(False)
     
-    def on_save_action(self):
+    def handle_save_action(self):
         "Save model parameters to the current file or prompt for a new file"
         # Check if model_params in None or if update_model() fails
         if not self.model_params:
@@ -205,7 +263,7 @@ class MainWindow(QMainWindow):
         else:
             self.on_save_as_action()
     
-    def on_save_as_action(self):
+    def handle_save_as_action(self):
         "Prompt for a file name and save model parameters to that file"
         # Ensure we have a model_params to save into
         if not self.model_params:
@@ -225,8 +283,48 @@ class MainWindow(QMainWindow):
             self.model_params.filename = fn
         except Exception as e:
             QMessageBox.critical(self, 'Error', f'Failed to save model file:\n{e}')
+        
+    def update_model(self):
+        "Läs in värden från gränssnittet och validera"
+        if not self.model_params:
+            self.model_params = fm.ModelParams()
+
+        fields = [
+            ('w_edit', 'w', 'Bredd (w)'),
+            ('h_edit', 'h', 'Höjd (h)'),
+            ('d_edit', 'd', 'Djup (d)'),
+            ('t_edit', 't', 'Tjocklek (t)'),
+            ('kx_edit', 'kx', 'Permeabilitet x (kx)'),
+            ('ky_edit', 'ky', 'Permeabilitet y (ky)'),
+        ]
+
+        invalid = []
+        for widget_name, param_name, label in fields:
+            widget = getattr(self, widget_name, None)
+            txt = widget.text().strip() if widget else ''
+            try:
+                value = float(txt)
+            except Exception:
+                invalid.append(label)
+            else:
+                setattr(self.model_params, param_name, value)
+
+        if invalid:
+            QMessageBox.critical(
+                self,
+                'Fel i inmatning',
+                'Du måste ange giltiga numeriska värden för:\n\n' + '\n'.join(invalid)
+            )
+            return False
+
+        # Matris och elementfaktor
+        mp = self.model_params
+        mp.D = np.array([[mp.kx, 0], [0, mp.ky]]) 
+        mp.el_size_factor = self.element_size_slider.value() / 100.0
+        return True
     
-    def on_action_execute(self):
+    def handle_action_execute(self):
+        print("==> handle_action_execute start")
         "Run solver unless already executed; prompt to start new model if so"
         # Prevent re-execution
         if self.model_results is not None:
@@ -239,7 +337,9 @@ class MainWindow(QMainWindow):
         
         # Silently abort execution if parameters are missing
         if not self.update_model():
+            print("==> update_model() returnerade False")
             return
+        print("==> startar beräkning")
         
         # Calculations not finished
         self.calc_done = False
@@ -254,6 +354,7 @@ class MainWindow(QMainWindow):
         self.solver_thread.start()
     
     def on_solver_finished(self):
+        print("==> on_solver_finished körs")
         "Handle completion os the solver thread"
         self.setEnabled(True)
 
@@ -268,7 +369,8 @@ class MainWindow(QMainWindow):
             btn.setEnabled(True)
         
     def on_show_geometry(self):
-        "Displat the geometry of the model"
+        print("==> on_show_geometry körs")
+        "Display the geometry of the model"
 
         if not self.calc_done or self.visualization is None:
             QMessageBox.warning(self, 'No data', 'Please run calculation first')
