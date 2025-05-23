@@ -37,8 +37,8 @@ class ModelParams:
         self.D = np.array([[self.kx, 0], [0, self.ky]]) # Permeability matrix
 
         # Additional parameters for parametric study
-        self.param_d = 1.0
-        self.param_t = 1.0
+        self.param_d = False
+        self.param_t = False
         self.d_start = self.d
         self.d_end = 9.0
         self.t_start = self.t
@@ -310,6 +310,7 @@ class ModelSolver:
         mesh.dofs_per_node = dofs_per_node
         mesh.el_size_factor = self.model_params.el_size_factor
         mesh.return_boundary_elements = True
+        mesh.use_gmsh_module = False
 
         # Generate mesh
 
@@ -464,32 +465,6 @@ class ModelSolver:
             # Store the maximum flow for this configuration
             max_flow_values.append(np.max(model_results.es))
             print(f"Max flow value: {np.max(model_results.es):.4f}")
-        
-        ## Run simulation for each value of t
-        #for t in t_values:
-            #print(f"Simulating with thickness t = {t:.2f}...")
-
-            # Create model with current parameter
-            #model_params = ModelParams()
-            #model_params.t = t
-
-            # Other parameters remain constant
-            #model_params.w = 100.0
-            #model_params.h = 10.0
-            #model_params.d = 5.0
-            #model_params.kx = 20.0
-            #model_params.ky = 20.0
-
-            # Create result storage and solver
-            #model_results = ModelResult()
-            #model_solver = ModelSolver(model_params, model_results)
-            
-            # Run the simulation
-            #model_solver.execute()
-            
-            # Store the maximum flow for this configuration
-            #max_flow_values.append(np.max(model_results.es))
-            #print(f"Max flow value: {np.max(model_results.es):.4f}")
 
         # Plot the results
         plt.figure(figsize=(10, 6))
@@ -516,7 +491,13 @@ class ModelSolver:
 
         if self.model_params.param_d:
             # Create a simulation range
-            d_range = np.linspace(self.model_params.d_start, self.model_params.d_end, self.model_params.param_steps) # kan vara så att s:et ska bort i slutet??
+            d_range = np.linspace(self.model_params.d, self.model_params.d_end, self.model_params.param_steps) 
+
+            print("d_range = %s" % d_range)
+            print("param_steps = %d" % self.model_params.param_steps)
+            print("d_end = %g" % self.model_params.d_end)
+            print("d = %g" % self.model_params.d)
+
 
             # Loop over the range
             for d in d_range:
@@ -534,7 +515,7 @@ class ModelSolver:
         
         elif self.model_params.param_t:
             # Create a simulation range 
-            t_range = np.linspace(self.model_params.t_start, self.model_params.t_end, self.model_params.param_steps)
+            t_range = np.linspace(self.model_params.t, self.model_params.t_end, self.model_params.param_steps)
 
             # Loop over the range
             for t in t_range:
@@ -575,7 +556,6 @@ class ModelSolver:
 
         # Create cell data from max_flow and flow
         cell_data = vtk.CellData(
-            vtk.Scalars(self.model_results.max_flow, name="max_flow"),
             vtk.Scalars(self.model_results.flow, name="flow")
         )
 
