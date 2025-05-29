@@ -1,112 +1,59 @@
 # -*- coding: utf-8 -*-
-import sys
 import os
 
 from qtpy.QtCore import QThread
-from qtpy.QtWidgets import QApplication, QProgressDialog, QMainWindow, QFileDialog, QMessageBox, QWidget
+from qtpy.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from qtpy import uic
 from qtpy.uic import loadUi
-from qtpy.QtWidgets import QMessageBox
 
-#import calfem.ui as cfui
 import flowmodel_5 as fm
-import xml.etree.ElementTree as ET
-import numpy as np
-import matplotlib.pyplot as plt
-import calfem.vis_mpl as cfv
-
-def clean_ui(uifile):
-    clean_file = os.path.join(os.path.dirname(uifile), '_cleaned_mainwindow_5.ui')
-    
-    return clean_file
 
 class SolverThread(QThread):
-    "Klass för att hantera beräkningar i bakgrunden"
+    "Class for handling calculations in the background"
     def __init__(self, solver, param_study = False):
-        "Klasskonstruktion"
+        "Classconstruction"
+        QThread.__init__(self)
+        self.solver = solver
+        self.param_study = param_study
+
         super().__init__()
         self.param_study = param_study
         self.solver = solver
     
+    def __del__(self):
+        self.wait()
         
     def run(self):
-        "Kör beräkningarna i en separat tråd"
+        "RUn calculations in a separate thread"
         if self.param_study:
             self.solver.execute_param_study()
         else:
             self.solver.execute()
 
 class MainWindow(QMainWindow):
-    "MainWindow-klass som hanterar vårt huvudfönster"
+    "MainWindow-class handle the user interface and interaction with the model"
     def __init__(self):
         "Constructor for the main window"
-        super(QMainWindow, self).__init__()
-
-        # Visualization object
-        self.visualization = None
-
-        # Calculation not finished
-        self.calc_done = False
-
-        # Clean UI file and load interface description
-        ui_path = os.path.join(os.path.dirname(__file__), 'mainwindow_5.ui')
-        loadUi(clean_ui(ui_path), self)
-
         self.model_params = fm.ModelParams()
         self.model_results = fm.ModelResult()
+
+        super(QMainWindow, self).__init__()
+       
+        # Load the UI file
+        print("---> Current working directory:", os.getcwd())
+        uic.loadUi('/Users/ellaodd-stenvall/Documents/GitHub/VSMN20/Worksheet 5/mainwindow_5.ui', self) ### Kommer detta krångla för när någon annan kör koden?
+
+        # Show window
+        self.show()
+        self.raise_()
 
         # Menu placement in ui window
         self.menuBar().setNativeMenuBar(False)
 
         # Element size slider
         self.element_size_label.setText('Element size:')
-        self.element_size_slider.setRange(50, 100)
+        self.element_size_slider.setRange(50, 200)
 
-        # Set input placeholders including boundary fields
-        placeholders = {
-            'w_edit': '100.0 m',
-            'h_edit': '10.0 m',
-            'd_edit': '5.0 m',
-            't_edit': '0.5 m',
-            'kx_edit': '20.0 m/day',
-            'ky_edit': '20.0 m/day',
-            'left_bc_text': '10.0 mvp',
-            'right_bc_text': '20.0 mvp',
-            'd_end_edit': '9.0 m',
-            't_end_edit': '5.0 m',
-        }
-        
-        # Set default values
-        defaults = {
-            'w_edit': str(self.model_params.w),
-            'h_edit': str(self.model_params.h),
-            'd_edit': str(self.model_params.d),
-            't_edit': str(self.model_params.t),
-            'kx_edit': str(self.model_params.kx),
-            'ky_edit': str(self.model_params.ky),
-            'left_bc_edit': str(self.model_params.bc_values['left_bc']),
-            'right_bc_edit': str(self.model_params.bc_values['right_bc']),
-            'd_end_edit': str(self.model_params.d_end),
-            't_end_edit': str(self.model_params.t_end),
-        }
-
-        # Set default values in UI
-        for attr, value in defaults.items():
-            if hasattr(self, attr):
-                getattr(self, attr).setText(value)
-
-            self.element_size_slider.setValue(int(self.model_params.el_size_factor * 100))
-
-        # Set default values for parameter study
-        if hasattr(self, 'param_step'):
-            self.param_step.setValue(5)
-
-        # Clear checked radio buttons
-        if hasattr(self, 'paramvarydradio'):
-            self.paramvarydradio.setChecked(False)
-        if hasattr(self, 'paramvarytradio'):
-            self.paramvarytradio.setChecked(False)
-        
         # Disable visualization buttons initially
         for btn in (self.show_geometry_button,
                     self.show_mesh_button,
@@ -119,7 +66,7 @@ class MainWindow(QMainWindow):
         self.actionopen_action.triggered.connect(self.handle_open_action)
         self.actionsave_action.triggered.connect(self.handle_save_action)
         self.actionsave_as_action.triggered.connect(self.handle_save_as_action)
-        #self.on_action_exit.triggered.connect(self.on_action_exit)
+        self.actionexit_action.triggered.connect(self.handle_action_exit)
         self.actionexecute_action.triggered.connect(self.handle_action_execute)
 
         # Connect visualization buttons
@@ -134,8 +81,7 @@ class MainWindow(QMainWindow):
         # Slider only updates element_size_factor
         self.element_size_slider.valueChanged.connect(self.on_element_size_changed)
 
-        self.show()
-        self.raise_()
+        self.update_controls()
     
     def update_controls(self):
         "Default values for widget"
@@ -149,8 +95,8 @@ class MainWindow(QMainWindow):
         self.d_end_edit.setText(str(self.model_params.d_end))
         self.t_end_edit.setText(str(self.model_params.t_end))
        
-        self.left_bc_text.setText(str(self.model_params.bc_values['left_bc']))
-        self.right_bc_text.setText(str(self.model_params.bc_values['right_bc']))
+        self.left_bc_edit.setText(str(self.model_params.bc_values['left_bc']))
+        self.right_bc_edit.setText(str(self.model_params.bc_values['right_bc']))
         
         self.element_size_slider.setValue(int(self.model_params.el_size_factor))
 
@@ -162,6 +108,46 @@ class MainWindow(QMainWindow):
 
     def update_model(self):
         "Load values from controller and update model"
+
+        # Make controll for valied inputs
+
+        # Define the mapping of UI fields to model parameters
+        fields = [
+             (self.w_edit, 'w', 'Width of domain (w)'),
+             (self.h_edit, 'h', 'Height of domain (h)'),
+             (self.d_edit, 'd', 'Depth of barrier (d)'),
+             (self.t_edit, 't', 'Thickness of barrier (t)'),
+             (self.kx_edit, 'kx', 'Permeability in x-direction (kx)'),
+             (self.ky_edit, 'ky', 'Permeability in y-direction (ky)'),
+             (self.left_bc_edit, 'left_bc', 'Left surface pressure (mvp)'),
+             (self.right_bc_edit, 'right_bc', 'Right surface pressure (mvp)'),
+        ]
+
+        invalid_fields = []
+        parsed_values = {}
+
+        # Try converting all float fields
+        for widget, key, label in fields:
+            try:
+                parsed_values[key] = float(widget.text())
+            except ValueError:
+                invalid_fields.append(label)
+
+        # Check int conversion separately
+        try:
+            param_steps = int(self.param_step.text())
+        except ValueError:
+            invalid_fields.append('Number of parameter steps')
+
+        if invalid_fields:
+            QMessageBox.warning(
+                self,
+                'Invalid Input',
+                'Please enter valid numbers for:\n' + '\n'.join(invalid_fields)
+            )
+            return False # Abort
+        
+        # If everything is valid, assign to model:
         self.model_params.w = float(self.w_edit.text())
         self.model_params.h = float(self.h_edit.text())
         self.model_params.d = float(self.d_edit.text())
@@ -170,8 +156,9 @@ class MainWindow(QMainWindow):
         self.model_params.ky = float(self.ky_edit.text())
         self.model_params.d_end = float(self.d_end_edit.text())
         self.model_params.t_end = float(self.t_end_edit.text())
-        self.model_params.bc_values['left_bc'] = float(self.left_bc_text.text())
-        self.model_params.bc_values['right_bc'] = float(self.right_bc_text.text())
+        self.model_params.bc_values['left_bc'] = float(self.left_bc_edit.text())
+        self.model_params.bc_values['right_bc'] = float(self.right_bc_edit.text())
+        self.model_params.param_steps = int(self.param_step.text())
 
         self.model_params.el_size_factor = self.element_size_slider.value() / 100.0
 
@@ -180,86 +167,38 @@ class MainWindow(QMainWindow):
 
         if self.paramvarytradio.isChecked():
             self.model_params.param_t = True
-
-        # Define the mapping of UI fields to model parameters
-        fields = [
-             ('w_edit', 'w', 'Width of domain (w)'),
-             ('h_edit', 'h', 'Height of domain (h)'),
-             ('d_edit', 'd', 'Depth of barrier (d)'),
-             ('t_edit', 't', 'Thickness of barrier (t)'),
-             ('kx_edit', 'kx', 'Permeability in x-direction (kx)'),
-             ('ky_edit', 'ky', 'Permeability in y-direction (ky)'),
-             ('left_bc_text', 'left_bc', 'Left surface pressure (mvp)'),
-             ('right_bc_text', 'right_bc', 'Right surface pressure (mvp)'),
-        ]
-
-        invalid = []
-
-        # Warnings for invalid inputs
-        if invalid:
-             QMessageBox.warning(
-                 self,
-                 'Invalid Input',
-                 'Please enter valid numbers for:\n' + '\n'.join(invalid)
-             )
-             return False
     
+   
     def handle_new_action(self):
-    #Återställer fält och förbereder nytt tomt projekt
-        self.reset_ui()
+        "Creates a new model and resets the UI"
+        self.w_edit.clear()
+        self.h_edit.clear()
+        self.d_edit.clear()
+        self.t_edit.clear()
+        self.kx_edit.clear()
+        self.ky_edit.clear()
+        self.d_end_edit.clear()
+        self.t_end_edit.clear()
+        self.left_bc_edit.clear()
+        self.right_bc_edit.clear()
+        self.element_size_slider.setValue(50)  # Reset to default value 
     
     
     def handle_open_action(self):
         "Open a model file and load its parameters into the UI"
-        # Open file dialog to select a model file
-        fn, _= QFileDialog.getOpenFileName(self, 'Open Model File', '', 'Model files (*.json)')
-        if not fn: return
-        mp = fm.ModelParams()
-        try:
-            mp.load(fn)
-        except Exception as e:
-            QMessageBox.critical(self, 'Error', f'Failed to load model file:\n{e}')
-            return
-    
-        # Set the model parameters in the UI
-        for param, attr in [
-                        ('w', 'w_edit'),
-                        ('h', 'h_edit'),
-                        ('d', 'd_edit'),
-                        ('t', 't_edit'),
-                        ('kx', 'kx_edit'),
-                        ('ky', 'ky_edit'),
-                        #('left_bc', 'left_bc_text'),
-                        # ('right_bc', 'right_bc_text')
-                        ]:
-            if not hasattr(self, attr):
-                continue
-            if param in mp.bc_values:
-                text = str(mp.bc_values[param])
-            else:
-                text = str(getattr(mp, param, ''))
-            getattr(self, attr).setText(text)
-    
-        self.model_params = mp
-        self.model_results = None
-        for btn in (self.show_geometry_button,self.show_mesh_button,
-                    self.show_nodal_values_button, self.show_element_values_button):
-            btn.setEnabled(False)
-    
+        filename, _ = QFileDialog.getOpenFileName(self, 'Open Model File', '', 'Model files (*.json *.jpg *.bmp)')
+        if filename!=" ":
+            self.filename = filename
+
     def handle_save_action(self):
         "Save model parameters to the current file or prompt for a new file"
-        # Check if model_params in None or if update_model() fails
-        if not self.model_params:
-            QMessageBox.warning(self, 'Warning', 'Nothing to save or invalid data')
-            return
-        fn = getattr(self.model_params, 'filename', None)
-        if fn:
-            try:
-                self.model_params.save(fn)
-            except Exception:
-                self.on_save_as_action()
-        else:
-            self.on_save_as_action()
+        self.update_model()
+
+        if self.filename=="":
+            filename,_ = QFileDialog.getSaveFileName(self, 'Save Model File', '', 'Model files (*.json)')
+
+            if filename!="":
+                self.filename = filename
     
     def handle_save_as_action(self):
         "Prompt for a file name and save model parameters to that file"
@@ -284,41 +223,42 @@ class MainWindow(QMainWindow):
     
     def handle_action_execute(self):
         print("==> handle_action_execute start")
-        "Run solver unless already executed; prompt to start new model if so"
-        # Prevent re-execution
-        if self.model_results is not None:
-            QMessageBox.warning(
-                self,
-                'Execution Already Run',
-                'To generate another domain create a new file'
-            )
-            return
+        "Run solver"
+
+        # Disable user interface during calculations
+        self.setEnabled(False)
+
+        # Update model from UI
+        self.update_model()
+
+        # Create a solver
+        self.solver = fm.ModelSolver(self.model_params, self.model_results)
+
+        # Create a thread with the calculations so that the UI doesn't freeze
+        self.solver_thread = SolverThread(self.solver)
+        self.solver_thread.finished.connect(self.on_solver_finished)
+        self.solver_thread.start()
         
         # Silently abort execution if parameters are missing
         if not self.update_model():
             print("==> update_model() returnerade False")
             return
         print("==> startar beräkning")
-        
-        # Calculations not finished
-        self.calc_done = False
-        self.setEnabled(False)
+    
+    def handle_action_exit(self):
+        "Exit the application"
+        self.close()
 
-        # Start solver thread
-        self.model_results = fm.ModelResult()
-        self.solver_thread = SolverThread(
-            fm.ModelSolver(self.model_params, self.model_results)
-        )
-        self.solver_thread.finished.connect(self.on_solver_finished)
-        self.solver_thread.start()
     
     def on_solver_finished(self):
-        print("==> on_solver_finished körs")
+        print("==> on_solver_finished running")
         "Handle completion os the solver thread"
         self.setEnabled(True)
 
         # Calculation finished
         self.calc_done = True
+
+        print("==> Calculation finished")
 
         # Recreate visualization object
         self.visualization = fm.ModelVisualization(self.model_params, self.model_results)
@@ -326,21 +266,26 @@ class MainWindow(QMainWindow):
         for btn in (self.show_geometry_button, self.show_mesh_button,
                     self.show_nodal_values_button, self.show_element_values_button):
             btn.setEnabled(True)
-    
+
+        # Print results
+        self.report = fm.ModelReport(self.model_params, self.model_results)
+        self.report_edit.clear()
+        self.report_edit.setPlainText(str(self.report)) 
+        
     def on_show_geometry(self):
-        print("==> on_show_geometry körs")
-        "Displat the geometry of the model"
+        print("==> on_show_geometry running")
+        "Display the geometry of the model"
 
         if not self.calc_done:
-            print("Beräkning inte klar!")
+            print("Calculations not finished!")
         if self.visualization is None:
-            print("Ingen visualisering hittades!")
+            print("No visualization found!")
 
         if not self.calc_done or self.visualization is None:
             QMessageBox.warning(self, 'No data', 'Please run calculation first')
             return
         
-        print("Visar geometrin nu...")
+        print("Showing geometry now...")
         self.visualization.show_geometry()
 
     def on_show_mesh(self):
@@ -349,6 +294,8 @@ class MainWindow(QMainWindow):
         if not self.calc_done or self.visualization is None:
             QMessageBox.warning(self, 'No data', 'Please run calculation first')
             return
+        
+        print("Showing mesh now...")
         self.visualization.show_mesh()
     
     def on_show_nodal_values(self):
@@ -357,6 +304,8 @@ class MainWindow(QMainWindow):
         if not self.calc_done or self.visualization is None:
             QMessageBox.warning(self, 'No data', 'Please run calculation first')
             return
+        
+        print("Showing nodal values now...")
         self.visualization.show_nodal_values()
     
     def on_show_element_values(self):
@@ -365,6 +314,8 @@ class MainWindow(QMainWindow):
         if not self.calc_done or self.visualization is None:
             QMessageBox.warning(self, 'No data', 'Please run calculation first')
             return
+        
+        print("Visualizing element values now...")
         self.visualization.show_element_values()
     
     def on_element_size_changed(self, value):
@@ -375,27 +326,17 @@ class MainWindow(QMainWindow):
     
     def on_execute_param_study(self):
         "Run a parameter study either on depth (d) or thickness (t)"
-        ###############################################################
+        
         # Update model from UI
-        if not self.update_model():
-            QMessageBox.warning(self, 'Invalid Input', 'Please enter valid numbers')
-            return
+        self.update_model()
         
         # Update filename
         self.model_params.params_filename = "param_study"
-        self.model_results = fm.ModelResult()
 
-        # Skapa en lösare
+        # Create a solver for the parameter study
         self.solver = fm.ModelSolver(self.model_params, self.model_results)
 
-        # Starta en tråd för att köra beräkningen, så att gränssnittet inte fryser
+        # Create a thread with the calculations so that the UI doesn't freeze
         self.solverThread = SolverThread(self.solver, param_study=True)
         self.solverThread.finished.connect(self.on_solver_finished)
-        self.solverThread.start()        
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    sys.exit(app.exec_())
-
-        
+        self.solverThread.start()    

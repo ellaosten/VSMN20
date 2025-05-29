@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import flowmodel_extended as fm # Importing the extended module
+import flowmodel_extended_3 as fm # Importing the extended module
 
 if __name__ == "__main__":
     # Initialization

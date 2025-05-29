@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-import math
-import sys
 
 import calfem.core as cfc
 import calfem.geometry as cfg  # for geomtric modeling
@@ -58,7 +56,7 @@ class ModelParams:
             "right_bc" : 20 # Markers for right boundary condition
         }
         self.bc_values = {
-            "left_bc" : 60.0, # Left boundary condition value
+            "left_bc" : 10.0, # Left boundary condition value
             "right_bc" : 0.0 # Right boundary condition value
         }
 
@@ -134,8 +132,6 @@ class ModelParams:
         model_params["load_markers"] = self.load_markers
         model_params["load_values"] = self.load_values
 
-        #model_params["coord"] = self.coord.tolist() # Convert NumPy array to list for JSON compatibility
-
         ofile = open(filename, "w")
         json.dump(model_params, ofile, sort_keys = True, indent = 4)
         ofile.close()
@@ -150,7 +146,6 @@ class ModelParams:
         self.version = model_params["version"]
         self.t = model_params["t"]
         self.ep = model_params["ep"]
-        #self.coord = np.array(model_params["coord"])
         self.w = model_params["w"]
         self.h = model_params["h"]
         self.d = model_params["d"]
@@ -165,7 +160,7 @@ class ModelParams:
 
 class ModelResult:
     """Class for storing results from calculations"""
-    def __inti__ (self):
+    def __init__ (self):
         
         # Initialize attributes for mesh and geometry
         self.loads = None
@@ -437,9 +432,6 @@ class ModelSolver:
         d_values = np.linspace(1.0, 9.0, 9)
         max_flow_values = []
 
-        ## Add parameter study for thickness t
-        #t_values = np.linspace(0.5, 5.0, 10)
-
         # Run simulation for each value
         for d in d_values:
             print(f"Simulating with barrier depth d = {d:.2f}...")
@@ -480,7 +472,7 @@ class ModelSolver:
         return d_values, max_flow_values
     
     def execute_param_study(self):
-        "Kör parameter studie"
+        "Run parametric study"
 
         # Store current values for the d and t parameters
 
@@ -512,6 +504,8 @@ class ModelSolver:
                 # Export to VTK
                 vtk_filename = "param_study_%02d.vtk" % i
                 self.export_vtk(vtk_filename)
+
+                i += 1
         
         elif self.model_params.param_t:
             # Create a simulation range 
@@ -530,6 +524,8 @@ class ModelSolver:
                 # Export to VTK
                 vtk_filename = "param_study_%02d.vtk" % i
                 self.export_vtk(vtk_filename)
+
+                i += 1
         
         # Restore preious values of d and t
 
@@ -556,7 +552,7 @@ class ModelSolver:
 
         # Create cell data from max_flow and flow
         cell_data = vtk.CellData(
-            vtk.Scalars(self.model_results.flow, name="flow")
+            vtk.Scalars(self.model_results.flow, name="flow"),
         )
 
         # Create structure
