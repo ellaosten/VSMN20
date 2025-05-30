@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="6" column="0">
+       <widget class="QLabel" name="ky_text">
+        <property name="text">
+         <string>Permeability in y-direction</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="6">
+       <widget class="QPushButton" name="show_geometry_button">
+        <property name="text">
+         <string>Geometry</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="d_edit"/>
+      </item>
+      <item row="0" column="4">
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="h_edit"/>
+      </item>
+      <item row="0" column="0" rowspan="2">
+       <widget class="QLabel" name="w_text">
+        <property name="text">
+         <string>Width</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="w_edit"/>
+      </item>
+      <item row="1" column="6" rowspan="2">
+       <widget class="QPushButton" name="show_mesh_button">
+        <property name="text">
+         <string>Mesh</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="5">
+       <widget class="QRadioButton" name="paramvarytradio">
+        <property name="text">
+         <string>Vary</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="6">
+       <widget class="QPushButton" name="param_button">
+        <property name="text">
+         <string>Param Study</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="5">
+       <widget class="QRadioButton" name="paramvarydradio">
+        <property name="text">
+         <string>Vary</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="t_start">
+        <property name="text">
+         <string>start value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QLineEdit" name="d_end_edit"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="h_text">
+        <property name="text">
+         <string>Height</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="5">
+       <widget class="QSpinBox" name="param_step"/>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="d_end">
+        <property name="text">
+         <string>end value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="left_bc_text">
+        <property name="text">
+         <string>Left boundary condition</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QLineEdit" name="kx_edit"/>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="t_end">
+        <property name="text">
+         <string>end value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="kx_text">
+        <property name="text">
+         <string>Permeability in x-direction</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="t_text">
+        <property name="text">
+         <string>Thickness</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="6">
+       <widget class="QPushButton" name="show_nodal_values_button">
+        <property name="text">
+         <string>Nodal Values</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="6">
+       <widget class="QPushButton" name="show_element_values_button">
+        <property name="text">
+         <string>Element Values</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="d_text">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="d_start">
+        <property name="text">
+         <string>start value</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QLineEdit" name="t_edit"/>
+      </item>
+      <item row="6" column="2">
+       <widget class="QLineEdit" name="ky_edit"/>
+      </item>
+      <item row="4" column="4">
+       <widget class="QLineEdit" name="t_end_edit"/>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="right_bc_text">
+        <property name="text">
+         <string>Right boundary condition</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="2">
+       <widget class="QLineEdit" name="left_bc_edit"/>
+      </item>
+      <item row="8" column="2">
+       <widget class="QLineEdit" name="right_bc_edit"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="element_size_label">
+      <property name="text">
+       <string>Max. el. size</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSlider" name="element_size_slider">
+      <property name="orientation">
+       <enum>Qt::Orientation::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPlainTextEdit" name="report_edit"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionnew_action"/>
+    <addaction name="actionopen_action"/>
+    <addaction name="actionsave_action"/>
+    <addaction name="actionsave_as_action"/>
+    <addaction name="actionexit_action"/>
+    <addaction name="actionexecute_action"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionnew_action">
+   <property name="text">
+    <string>new</string>
+   </property>
+  </action>
+  <action name="actionopen_action">
+   <property name="text">
+    <string>open</string>
+   </property>
+  </action>
+  <action name="actionsave_action">
+   <property name="text">
+    <string>save</string>
+   </property>
+  </action>
+  <action name="actionsave_as_action">
+   <property name="text">
+    <string>save_as</string>
+   </property>
+  </action>
+  <action name="actionexit_action">
+   <property name="text">
+    <string>exit</string>
+   </property>
+  </action>
+  <action name="actionexecute_action">
+   <property name="text">
+    <string>execute</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
